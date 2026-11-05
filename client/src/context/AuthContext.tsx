@@ -7,7 +7,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { api, setApiToken, setUnauthorizedHandler } from "../api";
+import { api, ApiError, setApiToken, setUnauthorizedHandler } from "../api";
 import type { Membership, Org, Role, User } from "../types";
 
 // Who is logged in. Kept in localStorage so a page refresh doesn't log you out.
@@ -127,8 +127,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     buildSession(startingSession.token)
       .then(apply)
-      // A network problem keeps the saved session. A bad token has already logged out.
-      .catch(() => undefined)
+      .catch((err: unknown) => {
+        // The saved account no longer exists, e.g. the database was reset.
+        // A network problem keeps the session, and a bad token has already logged out.
+        if (err instanceof ApiError && err.status === 404) logout();
+      })
       .finally(() => setReady(true));
   }, [apply, logout]);
 

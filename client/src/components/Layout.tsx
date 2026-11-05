@@ -1,13 +1,14 @@
-import { Bell, CalendarDays, House, Settings, ShieldCheck } from "lucide-react";
+import { Bell, CalendarDays, House, LogOut, Settings, ShieldCheck } from "lucide-react";
 import { useEffect, useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
-import { useMember } from "../context/AuthContext";
+import { useAuth, useMember } from "../context/AuthContext";
 import { useRealtime } from "../context/RealtimeContext";
 import { Toasts } from "./Toasts";
 
 // The frame around every page once you're in an organisation.
 // CSS turns the navigation into a bottom bar on phones and a top bar on wide screens.
 export function Layout() {
+  const { logout } = useAuth();
   const { org } = useMember();
   const { unread, connected } = useRealtime();
 
@@ -64,6 +65,11 @@ export function Layout() {
             </NavLink>
           )}
         </nav>
+
+        <button type="button" className="logout" onClick={logout}>
+          <LogOut aria-hidden size={18} />
+          Log out
+        </button>
       </header>
 
       {showOffline && (

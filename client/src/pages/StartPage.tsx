@@ -80,13 +80,15 @@ export function StartPage() {
       </form>
 
       <p className="auth-switch">
-        {org ? (
-          <Link to="/">Back to {org.name}</Link>
-        ) : (
-          <button type="button" className="link" onClick={logout}>
-            Log out
-          </button>
+        {org && (
+          <>
+            <Link to="/">Back to {org.name}</Link>
+            {" · "}
+          </>
         )}
+        <button type="button" className="link" onClick={logout}>
+          Log out
+        </button>
       </p>
     </div>
   );
