@@ -11,13 +11,17 @@
     "db:up": "docker compose up -d postgres redis",
     "dev": "concurrently --names gateway,auth,rules,scheduler,notification --prefix-colors cyan,green,yellow,magenta,blue \"npm run dev -w gateway\" \"npm run dev -w auth-service\" \"npm run dev -w rules-service\" \"npm run dev -w scheduler-service\" \"npm run dev -w notification-service\"",
     "dev:client": "npm run dev -w client",
-    "setup:env": "node scripts/setup-env.mjs"
+    "setup:env": "node scripts/setup-env.mjs",
+    "db:migrate": "npm run db:migrate --workspaces --if-present"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"
   },
   "allowScripts": {
     "esbuild@0.28.2": true,
-    "fsevents": false
+    "fsevents": false,
+    "@prisma/client@6.19.3": true,
+    "@prisma/engines@6.19.3": true,
+    "prisma@6.19.3": true
   }
 }

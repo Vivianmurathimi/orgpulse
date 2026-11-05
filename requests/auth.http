@@ -1,0 +1,117 @@
+# Requires the "REST Client" VS Code extension: click "Send Request" above each block.
+# Run them from top to bottom. Later requests reuse the tokens from earlier ones.
+# Registering twice fails with 409, so change the email (or run the seed logins only).
+
+@gateway = http://localhost:8080
+
+### 1. Register a new user
+# @name register
+POST {{gateway}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "newperson@example.test",
+  "password": "password123",
+  "name": "New Person",
+  "birthday": "1999-03-14"
+}
+
+### 2. Log in as that user
+# @name login
+POST {{gateway}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "newperson@example.test",
+  "password": "password123"
+}
+
+### 3. Create an organisation (the user becomes its admin; returns a new token)
+# @name createOrg
+POST {{gateway}}/api/orgs
+Authorization: Bearer {{login.response.body.token}}
+Content-Type: application/json
+
+{
+  "name": "Chess Club",
+  "timezone": "Europe/Budapest"
+}
+
+### 4. Current organisation (admins also see the invite code)
+GET {{gateway}}/api/orgs/current
+Authorization: Bearer {{createOrg.response.body.token}}
+
+### 5. Log in as a seed member
+# @name john
+POST {{gateway}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "john@grace.test",
+  "password": "password123"
+}
+
+### 6. John joins the new organisation with its invite code
+# @name join
+POST {{gateway}}/api/orgs/join
+Authorization: Bearer {{john.response.body.token}}
+Content-Type: application/json
+
+{
+  "inviteCode": "{{createOrg.response.body.organisation.inviteCode}}"
+}
+
+### 7. List members (should show the admin and John)
+GET {{gateway}}/api/orgs/current/members
+Authorization: Bearer {{createOrg.response.body.token}}
+
+### 8. Who am I, and which organisations am I in?
+GET {{gateway}}/api/auth/me
+Authorization: Bearer {{join.response.body.token}}
+
+### 9. Switch John back to Grace Church
+POST {{gateway}}/api/auth/switch-org
+Authorization: Bearer {{join.response.body.token}}
+Content-Type: application/json
+
+{
+  "orgId": "{{john.response.body.memberships[0].orgId}}"
+}
+
+### 10. Update my profile
+PATCH {{gateway}}/api/auth/me
+Authorization: Bearer {{login.response.body.token}}
+Content-Type: application/json
+
+{
+  "showBirthday": false
+}
+
+### 11. Create a group (admin)
+# @name group
+POST {{gateway}}/api/orgs/current/groups
+Authorization: Bearer {{createOrg.response.body.token}}
+Content-Type: application/json
+
+{
+  "name": "Tournament team"
+}
+
+### 12. Mark myself unavailable
+POST {{gateway}}/api/auth/me/unavailable
+Authorization: Bearer {{createOrg.response.body.token}}
+Content-Type: application/json
+
+{
+  "from": "2026-12-01",
+  "to": "2026-12-14"
+}
+
+### 13. A wrong password should return 401
+POST {{gateway}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "newperson@example.test",
+  "password": "not-the-password"
+}

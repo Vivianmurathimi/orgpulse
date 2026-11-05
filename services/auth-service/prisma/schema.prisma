@@ -1,0 +1,85 @@
+// Tables owned by the auth service. They live in the Postgres schema named in
+// DATABASE_URL (?schema=auth). No other service may read them.
+
+generator client {
+  provider = "prisma-client-js"
+  // Each service keeps its own client. The default location is shared
+  // between workspaces, so the services would overwrite each other.
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  MEMBER
+}
+
+model User {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  passwordHash String
+  name         String
+  birthday     DateTime? @db.Date
+  showBirthday Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+
+  memberships Membership[]
+}
+
+model Organisation {
+  id         String   @id @default(uuid())
+  name       String
+  inviteCode String   @unique
+  timezone   String   @default("Europe/Budapest")
+  createdAt  DateTime @default(now())
+
+  memberships Membership[]
+  groups      Group[]
+}
+
+model Membership {
+  id       String   @id @default(uuid())
+  userId   String
+  orgId    String
+  role     Role
+  joinedAt DateTime @default(now())
+
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organisation   Organisation     @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  groups         GroupMember[]
+  unavailability Unavailability[]
+
+  @@unique([userId, orgId])
+}
+
+model Group {
+  id    String @id @default(uuid())
+  orgId String
+  name  String
+
+  organisation Organisation  @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  members      GroupMember[]
+}
+
+model GroupMember {
+  groupId      String
+  membershipId String
+
+  group      Group      @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  membership Membership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+
+  @@id([groupId, membershipId])
+}
+
+model Unavailability {
+  id           String   @id @default(uuid())
+  membershipId String
+  from         DateTime @db.Date
+  to           DateTime @db.Date
+
+  membership Membership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+}
