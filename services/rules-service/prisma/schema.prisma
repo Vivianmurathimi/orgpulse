@@ -1,0 +1,105 @@
+// Tables owned by the rules service (Postgres schema: rules).
+// orgId, memberId, assigneeIds and targetGroupId are plain IDs, not foreign keys,
+// because users and groups live in the auth service's database.
+// A "member" here always means a user ID.
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum RuleType {
+  BIRTHDAY
+  ROTATION
+  TASK
+}
+
+enum Frequency {
+  ONCE
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+enum TaskStatus {
+  PENDING
+  DONE
+  OVERDUE
+  SKIPPED
+}
+
+enum SwapStatus {
+  OPEN
+  ACCEPTED
+  DECLINED
+}
+
+model Rule {
+  id                  String    @id @default(uuid())
+  orgId               String
+  type                RuleType
+  title               String
+  description         String?
+  frequency           Frequency
+  dayOfWeek           Int? // 0 = Sunday ... 6 = Saturday
+  dayOfMonth          Int? // 1-31; months that are too short use their last day
+  timeOfDay           String // "HH:mm" in the organisation's timezone
+  startDate           DateTime  @db.Date
+  targetGroupId       String?
+  assigneeIds         String[]
+  reminderHoursBefore Int?
+  paused              Boolean   @default(false)
+  createdBy           String
+  createdAt           DateTime  @default(now())
+
+  rotation RotationSlot[]
+  tasks    Task[]
+
+  @@index([orgId])
+}
+
+model RotationSlot {
+  id       String @id @default(uuid())
+  ruleId   String
+  memberId String
+  position Int
+
+  rule Rule @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+
+  @@unique([ruleId, position])
+}
+
+model Task {
+  id            String     @id @default(uuid())
+  ruleId        String
+  orgId         String
+  title         String
+  // Everyone responsible: one person for a rotation, several for a shared task,
+  // nobody if the whole rotation was unavailable.
+  assigneeIds   String[]
+  dueAt         DateTime
+  status        TaskStatus @default(PENDING)
+  completedAt   DateTime?
+  occurrenceKey String     @unique // "ruleId:YYYY-MM-DD", so an occurrence exists only once
+
+  rule  Rule          @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+  swaps SwapRequest[]
+
+  @@index([orgId, dueAt])
+}
+
+model SwapRequest {
+  id        String     @id @default(uuid())
+  taskId    String
+  fromId    String
+  toId      String
+  status    SwapStatus @default(OPEN)
+  createdAt DateTime   @default(now())
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+}

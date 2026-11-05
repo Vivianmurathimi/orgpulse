@@ -1,0 +1,98 @@
+# Requires the "REST Client" VS Code extension. Run from top to bottom.
+# First run: npm run seed -w auth-service, then npm run seed -w rules-service
+
+@gateway = http://localhost:8080
+
+### 1. Log in as the admin
+# @name admin
+POST {{gateway}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@grace.test",
+  "password": "password123"
+}
+
+### 2. List the rules
+GET {{gateway}}/api/rules
+Authorization: Bearer {{admin.response.body.token}}
+
+### 3. Preview the next 7 days. Nothing is created or sent.
+GET {{gateway}}/api/rules/preview?days=7
+Authorization: Bearer {{admin.response.body.token}}
+
+### 4. List the members (copy two userIds for steps 6)
+GET {{gateway}}/api/orgs/current/members
+Authorization: Bearer {{admin.response.body.token}}
+
+### 5. Create a weekly rotation
+# @name rotation
+POST {{gateway}}/api/rules
+Authorization: Bearer {{admin.response.body.token}}
+Content-Type: application/json
+
+{
+  "type": "ROTATION",
+  "title": "Ushering",
+  "frequency": "WEEKLY",
+  "dayOfWeek": 0,
+  "timeOfDay": "09:30",
+  "startDate": "2026-11-01"
+}
+
+### 6. Set the rotation order (paste real userIds from step 4)
+PUT {{gateway}}/api/rules/{{rotation.response.body.id}}/rotation
+Authorization: Bearer {{admin.response.body.token}}
+Content-Type: application/json
+
+{
+  "memberIds": ["PASTE-USER-ID-1", "PASTE-USER-ID-2"]
+}
+
+### 7. Pause the rule (send false to resume)
+PATCH {{gateway}}/api/rules/{{rotation.response.body.id}}
+Authorization: Bearer {{admin.response.body.token}}
+Content-Type: application/json
+
+{
+  "paused": true
+}
+
+### 8. Skip one Sunday
+POST {{gateway}}/api/rules/{{rotation.response.body.id}}/skip
+Authorization: Bearer {{admin.response.body.token}}
+Content-Type: application/json
+
+{
+  "date": "2026-12-27"
+}
+
+### 9. Status board for the next 7 days
+GET {{gateway}}/api/tasks/board
+Authorization: Bearer {{admin.response.body.token}}
+
+### 10. Log in as Grace
+# @name grace
+POST {{gateway}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "grace@grace.test",
+  "password": "password123"
+}
+
+### 11. Grace's next 4 weeks
+GET {{gateway}}/api/tasks/mine/upcoming
+Authorization: Bearer {{grace.response.body.token}}
+
+### 12. Grace's tasks today (empty until the scheduler runs in Phase 6)
+GET {{gateway}}/api/tasks/today
+Authorization: Bearer {{grace.response.body.token}}
+
+### 13. Mark a task done (paste a real taskId, available after Phase 6)
+PATCH {{gateway}}/api/tasks/PASTE-TASK-ID/done
+Authorization: Bearer {{grace.response.body.token}}
+
+### 14. Delete the rule from step 5
+DELETE {{gateway}}/api/rules/{{rotation.response.body.id}}
+Authorization: Bearer {{admin.response.body.token}}
