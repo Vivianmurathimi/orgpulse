@@ -95,7 +95,7 @@ services:
       PORT: 4004
       DATABASE_URL: postgresql://orgpulse:orgpulse@postgres:5432/orgpulse?schema=notification
       AUTH_SERVICE_URL: http://auth-service:4001
-      CLIENT_ORIGIN: http://localhost:5173
+      CLIENT_ORIGIN: ${CLIENT_ORIGIN:-http://localhost:5173}
     ports:
       - "4004:4004"
     depends_on:
@@ -110,7 +110,7 @@ services:
     environment:
       PORT: 8080
       JWT_SECRET: ${JWT_SECRET:-dev-jwt-secret-change-me}
-      CLIENT_ORIGIN: http://localhost:5173
+      CLIENT_ORIGIN: ${CLIENT_ORIGIN:-http://localhost:5173}
       AUTH_SERVICE_URL: http://auth-service:4001
       RULES_SERVICE_URL: http://rules-service:4002
       SCHEDULER_SERVICE_URL: http://scheduler-service:4003
@@ -127,6 +127,24 @@ services:
       notification-service:
         condition: service_healthy
     healthcheck: *service-health
+
+  client:
+    build:
+      context: ./client
+      args:
+        # These run in the browser, so they use addresses the browser can reach
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:8080}
+        VITE_SOCKET_URL: ${VITE_SOCKET_URL:-http://localhost:4004}
+    ports:
+      - "5173:5173"
+    depends_on:
+      gateway:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:5173/ > /dev/null"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
 
 volumes:
   postgres-data:

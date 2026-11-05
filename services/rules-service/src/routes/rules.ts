@@ -110,7 +110,13 @@ rulesRouter.get(
     const occurrences = await listOccurrences(req.user!.orgId!, days);
 
     res.json(
-      occurrences.map(({ date, ruleTitle, type, who }) => ({ date, ruleTitle, type, who })),
+      occurrences.map(({ date, ruleId, ruleTitle, type, who }) => ({
+        date,
+        ruleId,
+        ruleTitle,
+        type,
+        who,
+      })),
     );
   }),
 );

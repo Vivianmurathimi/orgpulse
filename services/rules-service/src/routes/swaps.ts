@@ -13,6 +13,19 @@ const respondSchema = z.object({
   action: z.enum(["accept", "decline"], { error: "must be accept or decline" }),
 });
 
+// Swap requests still waiting for my answer
+swapsRouter.get(
+  "/open",
+  requireOrg,
+  asyncHandler(async (req, res) => {
+    const { userId, orgId } = req.user!;
+    const swaps = await prisma.swapRequest.findMany({
+      where: { toId: userId, status: "OPEN", task: { orgId } },
+    });
+    res.json(swaps);
+  }),
+);
+
 swapsRouter.patch(
   "/:id",
   requireOrg,

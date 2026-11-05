@@ -3,6 +3,7 @@
 import { copyFileSync, existsSync } from "node:fs";
 
 const folders = [
+  "client",
   "gateway",
   "services/auth-service",
   "services/rules-service",

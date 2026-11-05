@@ -4,6 +4,7 @@
   "private": true,
   "description": "Smart notifications for organisations: rules instead of calendar entries.",
   "workspaces": [
+    "client",
     "gateway",
     "services/*"
   ],
