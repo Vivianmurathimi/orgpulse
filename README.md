@@ -156,6 +156,8 @@ Pressing **Run scheduler now** a second time shows that nothing is sent twice. *
 | Problem | Fix |
 |---|---|
 | A port is already in use | Stop whatever is using it. `lsof -i :5173` shows what that is |
+| "Internal server error" when logging in | The database has no tables or data, usually after `docker compose down -v`. With `npm run dev` running, run `npm run db:migrate`, then `npm run seed:demo`. With Docker, run `npm run seed:docker` |
+| Containers stay on `Created` | `npm run dev` or `npm run dev:client` still holds the ports. Stop them, then run `docker compose up --build -d` again |
 | "Reconnecting" stays on screen | The Notification service is not reachable on port 4004. Check http://localhost:8080/status |
 | Grace has no birthday card or duty | Seed again today, then use **Reset today** and **Run scheduler now** |
 | The page looks out of date after a rebuild | The app's service worker may be serving an older version. Close the tab and open it again |
