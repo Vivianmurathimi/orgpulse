@@ -1,0 +1,26 @@
+# Requires the "REST Client" VS Code extension. Run from top to bottom.
+# First open the browser snippet in requests/socket-test.js to watch the events arrive.
+
+@gateway = http://localhost:8080
+
+### 1. Log in as the admin
+# @name admin
+POST {{gateway}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@grace.test",
+  "password": "password123"
+}
+
+### 2. Run the scheduler now (the demo button). Run it twice: the second time sends nothing.
+POST {{gateway}}/api/scheduler/run
+Authorization: Bearer {{admin.response.body.token}}
+
+### 3. See today's tasks
+GET {{gateway}}/api/tasks/board
+Authorization: Bearer {{admin.response.body.token}}
+
+### 4. Forget today's events and finished tasks, so the demo can be run again
+POST {{gateway}}/api/scheduler/reset-today
+Authorization: Bearer {{admin.response.body.token}}

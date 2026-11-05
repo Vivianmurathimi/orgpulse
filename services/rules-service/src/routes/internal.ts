@@ -24,6 +24,12 @@ const markOverdueSchema = z.object({
   now: z.iso.datetime().optional(),
 });
 
+const resetSchema = z.object({
+  orgId: z.string(),
+  from: z.iso.datetime(),
+  to: z.iso.datetime(),
+});
+
 internalRouter.get(
   "/rules",
   asyncHandler(async (req, res) => {
@@ -85,6 +91,24 @@ internalRouter.post(
     const { count } = await prisma.task.updateMany({
       where: { status: "PENDING", dueAt: { lt: now ? new Date(now) : new Date() } },
       data: { status: "OVERDUE" },
+    });
+    res.json({ count });
+  }),
+);
+
+// For repeating the demo: makes finished tasks in a time range pending again
+internalRouter.post(
+  "/tasks/reset",
+  asyncHandler(async (req, res) => {
+    const { orgId, from, to } = validate(resetSchema, req.body);
+
+    const { count } = await prisma.task.updateMany({
+      where: {
+        orgId,
+        status: { in: ["DONE", "OVERDUE"] },
+        dueAt: { gte: new Date(from), lt: new Date(to) },
+      },
+      data: { status: "PENDING", completedAt: null },
     });
     res.json({ count });
   }),

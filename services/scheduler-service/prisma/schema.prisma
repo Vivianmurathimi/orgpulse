@@ -1,0 +1,29 @@
+// Tables owned by the scheduler service (Postgres schema: scheduler).
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// One row per event ever sent. If a key already exists, the event is not sent
+// again, which makes it safe to run the scheduler twice or restart it.
+// Keys look like "task:<ruleId>:2026-11-09" or "birthday:<memberId>:2026-11-09".
+model FiredEvent {
+  eventKey String   @id
+  orgId    String // lets one organisation reset its own events
+  firedAt  DateTime @default(now())
+
+  @@index([orgId, firedAt])
+}
+
+// Where each rotation has got to
+model RotationCursor {
+  ruleId          String    @id
+  currentPosition Int
+  lastAdvancedOn  DateTime? @db.Date // the occurrence that last moved it on
+}
