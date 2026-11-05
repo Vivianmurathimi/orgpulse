@@ -93,6 +93,7 @@ services:
       PORT: 4004
       DATABASE_URL: postgresql://orgpulse:orgpulse@postgres:5432/orgpulse?schema=notification
       AUTH_SERVICE_URL: http://auth-service:4001
+      CLIENT_ORIGIN: http://localhost:5173
     ports:
       - "4004:4004"
     depends_on:

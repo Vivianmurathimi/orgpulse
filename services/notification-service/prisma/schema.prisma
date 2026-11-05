@@ -1,0 +1,57 @@
+// Tables owned by the notification service (Postgres schema: notification).
+// userId, orgId and the like are plain IDs: users live in the auth service.
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Category {
+  BIRTHDAY
+  TASK
+  REMINDER
+  SWAP
+  STATUS
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  orgId     String
+  category  Category
+  title     String
+  message   String
+  data      Json?
+  read      Boolean  @default(false)
+  eventId   String
+  createdAt DateTime @default(now())
+
+  // The same event can never create two notifications for one person
+  @@unique([userId, eventId])
+  @@index([userId, orgId, createdAt])
+}
+
+model Wish {
+  id             String   @id @default(uuid())
+  orgId          String
+  birthdayUserId String
+  birthdayDate   DateTime @db.Date
+  fromUserId     String
+  fromName       String
+  text           String
+  createdAt      DateTime @default(now())
+
+  @@index([orgId, birthdayDate])
+}
+
+model Preference {
+  userId          String   @id
+  quietFrom       String? // "HH:mm" in the organisation's timezone
+  quietTo         String?
+  mutedCategories String[]
+}
