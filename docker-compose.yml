@@ -77,7 +77,8 @@ services:
       DATABASE_URL: postgresql://orgpulse:orgpulse@postgres:5432/orgpulse?schema=scheduler
       AUTH_SERVICE_URL: http://auth-service:4001
       RULES_SERVICE_URL: http://rules-service:4002
-      SCHEDULER_ENABLED: ${SCHEDULER_ENABLED:-true}
+      # Off by default, so the "Run scheduler now" button is what fires events in the demo
+      SCHEDULER_ENABLED: ${SCHEDULER_ENABLED:-false}
       SCHEDULER_CRON: ${SCHEDULER_CRON:-* * * * *}
     ports:
       - "4003:4003"

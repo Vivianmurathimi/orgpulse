@@ -13,7 +13,10 @@
     "dev": "concurrently --names gateway,auth,rules,scheduler,notification --prefix-colors cyan,green,yellow,magenta,blue \"npm run dev -w gateway\" \"npm run dev -w auth-service\" \"npm run dev -w rules-service\" \"npm run dev -w scheduler-service\" \"npm run dev -w notification-service\"",
     "dev:client": "npm run dev -w client",
     "setup:env": "node scripts/setup-env.mjs",
-    "db:migrate": "npm run db:migrate --workspaces --if-present"
+    "db:migrate": "npm run db:migrate --workspaces --if-present",
+    "seed": "npm run seed -w auth-service && npm run seed -w rules-service",
+    "seed:demo": "npm run seed -w auth-service && npm run seed -w rules-service -- --cleaning-today",
+    "seed:docker": "docker compose exec -T auth-service node dist/seed.js && docker compose exec -T rules-service node dist/seed.js --cleaning-today"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"
